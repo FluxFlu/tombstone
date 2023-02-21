@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Tombstone | Operators</title>
+        <link rel="icon" type="image/x-icon" href="../assets/Tombstone.png">
+        <link rel="stylesheet" type="text/css" href="../style.css"/>
+    </head>
+    <body><br><br>
+        <h1>
+            Operators
+        </h1>
+        <div>
+            <p>
+                List of operators in order of precedence:<br><br>
+
+                Lower precedence operators are evaluated first. (eg. <cb> n * i </cb> would have a lower precedence than <cb> n + i </cb>).
+
+                If two operators have the same precedence, evaluation is performed on a left-to-right basis.
+            </p>
+            <p>
+
+<h># Precedence 1:</h>
+
+
+<cb> (n) </cb> | Grouped statements.
+          This exists to allow users to manipulate precedence.
+
+
+<h># Precedence 2:</h>
+
+Note: Each operator in this category is impure.
+
+
+<cb> n++ </cb> | Adds one to n and returns the value of n before it was increased
+
+<cb> n-- </cb> | Subtracts one from n and returns the value of n before it was decreased
+
+<h># Precedence 3:</h>
+
+
+<cb> !n </cb> | Returns 1 if n is equal to 0, otherwise returns 0
+
+<cb> ~n </cb> | Returns n but with every bit flipped
+
+
+<h># Precedence 4:</h>
+
+
+<cb> n ** i </cb> | Returns n to the power of i
+
+
+<h># Precedence 5:</h>
+
+
+<cb> n * i </cb> | Returns n times i
+
+<cb> n / i </cb> | Returns n divided by i
+
+<cb> n % i </cb> | Returns the remainder of n divided by i
+
+
+<h># Precedence 6:</h>
+
+
+<cb> n + i </cb> | Returns n plus i
+
+<cb> n - i </cb> | Returns n minus i
+
+
+<h># Precedence 7:</h>
+
+
+<cb> n &lt;&lt; i </cb> | Returns n shifted i bits to the left
+
+<cb> n &gt;&gt; i </cb> | Returns n shifted i bits to the right (signed)
+
+<cb> n &gt;&gt;&gt; i </cb> | Returns n shifted i bits to the right (unsigned)
+
+
+<h># Precedence 8:</h>
+
+
+<cb> n &lt; i </cb> | Returns 1 if n is less than i, otherwise returns 0
+
+<cb> n &gt; i </cb> | Returns 1 if n is greater than i, otherwise returns 0
+
+<cb> n &lt;= i </cb> | Returns 1 if n is less than or equal to i, otherwise returns 0
+
+<cb> n &gt;= i </cb> | Returns 1 if n is less than or equal to i, otherwise returns 0
+
+
+<h># Precedence 9:</h>
+
+
+<cb> n == i </cb> | Returns 1 if n is equal to i, otherwise returns 0
+
+<cb> n != i </cb> | Returns 1 if n is not equal to i, otherwise returns 0
+
+<cb> n === i </cb> | Returns 1 if n is equal to i and n is the same type as i, otherwise returns 0
+
+<cb> n !== i </cb> | Returns 1 if n is not equal to i and n is the same type as i, otherwise returns 0
+
+
+<h># Precedence 10:</h>
+
+
+<cb> n & i </cb> | Returns n bitwise AND i
+
+
+<h># Precedence 11:</h>
+
+
+<cb> n ^ i </cb> | Returns n bitwise XOR i
+
+
+<h># Precedence 12:</h>
+
+
+<cb> n | i </cb> | Returns n bitwise OR i
+
+
+<h># Precedence 13:</h>
+
+
+<cb> n && i </cb> | Returns n logical AND i
+
+
+<h># Precedence 14:</h>
+
+
+<cb> n || i </cb> | Returns n logical OR i
+
+<h># Precedence 15:</h>
+
+Note: Each operator in this category is impure.
+
+<cb> n = i </cb>  | Assigns i to n and returns n
+
+<cb> n += i </cb> | <cb> n = n + i </cb>
+
+<cb> n -= i </cb> | <cb> n = n - i </cb>
+
+<cb> n *= i </cb> | <cb> n = n * i </cb>
+
+<cb> n /= i </cb> | <cb> n = n / i </cb>
+
+<cb> n %= i </cb> | <cb> n = n % i </cb>
+
+<cb> n **= i </cb> | <cb> n = n ** i </cb>
+
+<cb> n &= i </cb> | <cb> n = n & i </cb>
+
+<cb> n |= i </cb> | <cb> n = n | i </cb>
+
+<cb> n ^= i </cb> | <cb> n = n ^ i </cb>
+
+<cb> n &lt;&lt;= i </cb> | <cb> n = n &lt;&lt; i </cb>
+
+<cb> n &gt;&gt;= i </cb> | <cb> n = n &gt;&gt; i </cb>
+
+<cb> n &gt;&gt;&gt;= i </cb> | <cb> n = n &gt;&gt;&gt; i </cb>
+
+<cb> n &&= i </cb> | <cb> if (n) {n = i} </cb>
+
+<cb> n ||= i </cb> | <cb> if (!n) {n = i} </cb>
+
+</p>
+        </div>
+    </body>
+</html>

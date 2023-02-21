@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Tombstone | Purity</title>
+    <link rel="icon" type="image/x-icon" href="../assets/Tombstone.png">
+    <link rel="stylesheet" type="text/css" href="../style.css" />
+</head>
+
+<body><br><br>
+    <h1>
+        Purity
+    </h1>
+    <div>
+        <p>
+            Purity:
+        </p>
+
+        <p>
+            A pure variable is a variable that is unable to be modified. A pure function is a function that does not
+            modify the values within it.
+
+            Example:
+        </p>
+        <pre>
+
+<comment>// add doesn't need to be impure, because it doesn't modify any values.</comment>
+fn add = i32 (i32 x, i32 y) => {
+    return x + y;
+}
+
+<comment>// sum_array is impure because it includes `i++`. Loops are also considered impure because they cannot be used from a pure context.</comment>
+impure fn sum_array = i32 (i32* x) => {
+    i32 acc = 0;
+    for(i32 i = 0; i &lt; 3; i++) {
+        acc += x[i]; 
+    }
+    return acc;
+}
+
+<comment>// The following code doesn't run, because it's a pure function that attempts to call an impure function (sum_array).</comment>
+export fn main = i32 (i32 x) => {
+    i32* arr = i32 [1, 2, 3];
+    return sum_array(arr);
+}
+
+</pre>
+    </div>
+</body>
+
+</html>

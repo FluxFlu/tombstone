@@ -1,0 +1,2 @@
+- `node` : Compile to wasm and generate node.js code that provides support for the generated code.
+- `js` : Compile to wasm and generate regular js code that provides support for the generated code.

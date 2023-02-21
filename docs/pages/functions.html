@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Tombstone | Functions</title>
+    <link rel="icon" type="image/x-icon" href="../assets/Tombstone.png">
+    <link rel="stylesheet" type="text/css" href="../style.css" />
+</head>
+
+<body><br><br>
+    <h1>
+        Functions
+    </h1>
+    <div>
+        <p>
+            Functions:
+        </p>
+<p>
+A function is a data type that contains code which can be run by "calling" the function.
+
+To declare a function, use "fn"
+
+For example,
+
+</p>
+<pre>
+fn main = () => {
+    <comment>// Any code included here is a part of the function!</comment>
+}
+</pre>
+<p>
+The syntax for the function datatype is as follows: <cb> `return_type` (...`parameters`) => {`code`} </cb>
+
+For example,
+
+</p>
+<pre>
+<comment>// This function accepts an i32 and an i64, and it returns the result of adding them, in the form of an i64. </comment>
+fn main = i64 (i32 x, i64 y) => {
+    return x + y;
+}
+</pre>
+<p>
+
+A function is called using the syntax: <cb> `function_name`(...`parameters`) </cb>
+
+For example,
+</p>
+<pre>
+fn main = i64 (i32 x, i64 y) => {
+    return x + y;
+}
+<comment>// This function returns 6. </comment>
+fn six = i64 () => {
+    return main(2, 4);
+}
+</pre>
+<p>
+To export functions so they can be run from other files, use the `export` keyword. They can then be imported from other files using "<a href="./include.html">include</a>."
+</p>
+<pre>
+<comment>// file_one.tmb</comment>
+export fn main = i64 (i32 x, i64 y) => {
+    return x + y;
+}
+<comment>// file_two.tmb</comment>
+#include main from "./file_two.tmb" as main with [i32, i64] returns i64
+
+fn six = i64 () => {
+    return main(2, 4);
+}
+</pre>
+<p>
+Code is not run directly when executed, you must define a function to be the "entry point" for the code. To do this, use the entry keyword.
+</p>
+<pre>
+<comment>// If you compile this file and run it, `six` is the function that will run.</comment>
+export fn five = i64 () => {
+    return 1 + 4;
+}
+entry fn six = i64 () => {
+    return 2 + 4;
+}
+</pre>
+<p>
+Files run this way will be passed a <cb> str </cb> parameter, containing the arguments the original file was run with.
+
+For example, running `node test.js ARGS` will pass `ARGS` to the entry function.
+
+If a file that uses the entry keyword is included within a project that doesn't use that file as the entry point, the entry keyword will be treated as though it were the same as the export keyword.
+</p>
+
+</div>
+</body>
+
+</html>

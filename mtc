@@ -1,0 +1,107 @@
+#!/bin/env node
+const wabt = require("wabt")
+const fs = require('fs');
+// const importHandler = require('./TMB/importHandler.js');
+// const harbourCompile = require('./harbour.js');
+// const importHandler = require('./importHandler.js');
+let args = process.argv.slice(2);
+if (args[0] == '-h' || args[0] == '--help') {
+    console.log(fs.readFileSync(`${__dirname}/TMB/helpMessage`, "utf-8"));
+    return 0;
+}
+if (args[0] == '--languageList') {
+    console.log(fs.readFileSync(`${__dirname}/TMB/languageList`, "utf-8"));
+    return 0;
+}
+if (args[0] == "--docs") {
+    console.log(`${__dirname}/docs/index.html`);
+    return 0;
+}
+if (!args[0] || !args[0][0] || args[0][0] == '-') return;
+
+// let language = args[0];
+// args.splice(0, 1);
+const options = {
+    "optimize": true,
+    "minHeapSize": 4096,
+    "maxHeapSize": 65536,
+    "garbageCollect": true,
+    "pointerSize": 32,
+    "language": "node",
+}
+
+const flags = {};
+
+while (args.filter(e => e[0] == '-').length > 0) {
+    for (let i = 0; i < args.length; i++)
+        if (args[i][0] == '-') {
+            if (args[i + 1][0] != '-')
+                options[args[i].slice(2)] = args.splice(i + 1, 1);
+            else
+                options[args[i].slice(2)] = true;
+            args.splice(i, 1);
+            break;
+        }
+}
+
+
+
+module.exports = { options, flags }
+
+
+const compile = require('./TMB/tombstone.js');
+
+
+
+if (!(args[1] && args[1].match(/\S/)))
+    args[1] = args[0].replace(/\.tmb$/, ".wat");
+if (args[1] == args[0])
+    args[1] = args[1] + ".tmb";
+
+Object.keys(options).forEach(e => {
+    if (Array.isArray(options[e]) && options[e].length == 1)
+        options[e] = options[e][0]
+    if (!isNaN(+options[e]))
+        options[e] = +options[e]
+    if (options[e] == "false")
+        options[e] = false;
+});
+
+
+function mtc(file) {
+    if (!file || !file.length) {
+        console.error("File does not exist");
+        return;
+    }
+
+    let returnValue;
+    try {
+        returnValue = compile(file, args[0]);
+    } catch (e) {
+        console.error(e);
+        console.error(`\nFailed to compile '${args[0]}' to '${args[1]}'`);
+        return 1;
+    }
+    if (returnValue.code == null) {
+        console.log(`Failed to compile '${args[0]}' to '${args[1]}'`);
+        return 1;
+    }
+    const set_memory = `\n(func (export "setMemory") (param $n i32) (param $i i32)\n\tlocal.get $n\n\tlocal.get $i\n\ni32.store\n)`;
+    let to_assemble = `(module${returnValue.imports.join('\n')}${returnValue.compiledFiles.map(e => e.imports).join('\n')}${set_memory}${returnValue.compiledFiles.map(e => e.code).join('\n')}${returnValue.code}\n)`;
+
+    if (options.generateWat)
+        fs.writeFileSync(args[1], to_assemble)
+
+    if (options.language == "js" || options.language == "node")
+        fs.writeFileSync(args[1].replace('wat', 'js'), returnValue.support);
+        
+    console.log(`Compiled '${args[0]}' to '${args[1]}'`);
+    wabt().then(wabt => {
+        fs.writeFileSync(args[1].replace('.wat', '.wasm'), wabt.parseWat("./test.wat", to_assemble).toBinary({ log: false }).buffer, "binary");
+    });
+
+    return 0;
+}
+
+
+return mtc(fs.readFileSync(args[0], "utf-8"));

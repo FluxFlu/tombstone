@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Tombstone | Include Statements</title>
+        <link rel="icon" type="image/x-icon" href="../assets/Tombstone.png">
+        <link rel="stylesheet" type="text/css" href="../style.css"/>
+    </head>
+    <body><br><br>
+        <h1>
+            Include Statements
+        </h1>
+        <div>
+            <p>
+                Include Statements:
+            </p>
+<p>
+
+
+<h>What is an include statement</h>
+
+Include statements are used to import both data from both the standard library and from other files
+
+<h>How to include something</h>
+
+Include statements follow the syntax of <cb> #include `original name` from `location` as `name` with `parameters` returns `return value` </cb>
+
+It is important to note that when including from the standard library you use `&lt;location&gt;` whereas when including from a relative file you use "location".
+
+For example, to include the standard library function print from stdio, one would use <cb> #include print from &lt;stdio&gt; as print with [str] </cb>
+
+<h>Example of a full code block using that include</h>
+</p>
+<pre>
+
+#include print from &lt;stdio&gt; as print with [str]
+
+export impure fn main = () => {
+    str x = "Hello, world!";
+    print(x); <comment>// Prints "Hello, world!"</comment>
+}
+
+</pre>
+<p>
+
+As you can see, <cb> print(str) </cb> is included into the file, and it is then used to print a string.
+
+<h>Trusting that included values are pure</h>
+
+By default, values are considered impure when included from the standard library or included from .tmb files where they are declared as impure.
+
+In order to treat a value as pure, use <cb> #trust include </cb> instead of just <cb> #include </cb>.
+</p>
+        </div>
+    </body>
+</html>
