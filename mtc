@@ -51,12 +51,16 @@ module.exports = { options, flags }
 
 const compile = require('./TMB/tombstone.js');
 
-
+if (options.language == "js" || options.language == "node") {
+    if (args[1])
+        args[1] = args[1].replace('.wasm', '.wat');
+}
 
 if (!(args[1] && args[1].match(/\S/)))
     args[1] = args[0].replace(/\.tmb$/, ".wat");
 if (args[1] == args[0])
     args[1] = args[1] + ".tmb";
+
 
 Object.keys(options).forEach(e => {
     if (Array.isArray(options[e]) && options[e].length == 1)
@@ -89,13 +93,16 @@ function mtc(file) {
     const set_memory = `\n(func (export "setMemory") (param $n i32) (param $i i32)\n\tlocal.get $n\n\tlocal.get $i\n\ni32.store\n)`;
     let to_assemble = `(module${returnValue.imports.join('\n')}${returnValue.compiledFiles.map(e => e.imports).join('\n')}${set_memory}${returnValue.compiledFiles.map(e => e.code).join('\n')}${returnValue.code}\n)`;
 
+    let files_compiled_to = [args[1].replace('.tmb', '.wasm')];
+
     if (options.generateWat)
         fs.writeFileSync(args[1], to_assemble)
 
-    if (options.language == "js" || options.language == "node")
-        fs.writeFileSync(args[1].replace('wat', 'js'), returnValue.support);
-        
-    console.log(`Compiled '${args[0]}' to '${args[1]}'`);
+    if (options.language == "js" || options.language == "node") {
+        fs.writeFileSync(args[1].replace('.wat', '.js'), returnValue.support);
+        files_compiled_to.push(args[1].replace('.wat', '.js'));
+    }
+    console.log(`Compiled '${args[0]}' to ['${files_compiled_to.join("', '")}']`);
     wabt().then(wabt => {
         fs.writeFileSync(args[1].replace('.wat', '.wasm'), wabt.parseWat("./test.wat", to_assemble).toBinary({ log: false }).buffer, "binary");
     });

@@ -30,6 +30,7 @@ function genSupport(language, linkedFiles, linkedLibraries, originalFileName, or
     let out = "";
     const library_setup = require("../../libt/" + language + "/library_setup")
     if (language == "node") {
+        out += '#!/usr/bin/env node';
         out += '\nconst fs = require("fs");';
         out += '\nlet wasmInstance;';
         out += '\n\n';
@@ -48,13 +49,13 @@ function genSupport(language, linkedFiles, linkedLibraries, originalFileName, or
             (string.charCodeAt(i + 3) << 24)
         );`;
         out += '\n}';
-        out += `\nprocess.argv.shift()`
-        out += `\nprocess.argv.shift()`
-        out += `\nprocess.argv = process.argv.join(' ')`
-        out += `\n`
-        out += `\nregister_string(${Math.ceil(options.maxHeapSize / 257) * 4}, process.argv)`
-        out += `\n`
-        out += fileData.entryPoint + `(${Math.ceil(options.maxHeapSize / 257) * 4});`
+	out += `\nprocess.argv.shift();`;
+        out += `\nprocess.argv.shift();`;
+	out += `\nprocess.argv = process.argv.join(' ')`;
+        out += `\n`;
+        out += `\nregister_string(${Math.ceil(options.maxHeapSize / 257) * 4}, process.argv)`;
+        out += `\n`;
+        out += fileData.entryPoint + `(${Math.ceil(options.maxHeapSize / 257) * 4});`;
     }
     return out;
 }
