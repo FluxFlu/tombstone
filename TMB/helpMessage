@@ -14,8 +14,7 @@
   --docs                                            Display the file location of the language documentation
   --language                                        The target language to compile to
   --optimize                                        Whether or not to optimize the post-compilation file
-  --minHeapSize                                     Minimum amount of memory the program should use for the heap
-  --maxHeapSize                                     Maximum amount of memory the program can use for the heap
+  --heapSize                                        Memory the program can use for the heap (units of 64mb)
   --garbageCollect                                  Whether or not to run the garbage collector
   --generateWat                                     Whether or not to produce a wat file
 

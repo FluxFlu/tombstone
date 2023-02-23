@@ -18,8 +18,7 @@ if (!args[0] || !args[0][0] || args[0][0] == '-') return;
 
 const options = {
     "optimize": true,
-    "minHeapSize": 4096,
-    "maxHeapSize": 65536,
+    "heapSize": 4096,
     "garbageCollect": true,
     "pointerSize": 32,
     "language": "node",
@@ -66,6 +65,8 @@ Object.keys(options).forEach(e => {
         options[e] = false;
 });
 
+options["maxHeapSize"] = options["heapSize"];
+options["minHeapSize"] = options["heapSize"];
 
 function mtc(file) {
     if (!file || !file.length) {
