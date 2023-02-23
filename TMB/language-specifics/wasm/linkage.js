@@ -35,6 +35,8 @@ const include_map = {};
 const get_include_map = () => include_map;
 const reset_include_map = () => include_map = {};
 
+// const linkedFilesNames = {}
+
 function handleImportName(from, name, result, params) {
     // if (from[0] == `"`) {
     //     from = from.slice(1, -1);
@@ -42,7 +44,10 @@ function handleImportName(from, name, result, params) {
     //     return `"linked_${name_from_dir(base_dir + from)}" "` + name + `"`;
     // } else if (from[0] == `<`) {
     from = from.slice(1, -1);
-    linkedLibraries.push({ location: from, result: result, params: params });
+    // if (!linkedLibraries[from]) {
+        linkedLibraries.push({ location: from, result: result, params: params });
+        // linkedLibraries[from] = true;
+    // }
     return `"lib_${from}" "` + name + `"`;
     // }
 }

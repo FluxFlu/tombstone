@@ -34,7 +34,8 @@ function genSupport(language, linkedFiles, linkedLibraries, originalFileName, or
         out += '\nconst fs = require("fs");';
         out += '\nlet wasmInstance;';
         out += '\n\n';
-        linkedLibraries.filter(lib => library_setup[lib.location]).forEach(lib => out += "const lib_" + lib.location + " = " + genLibraryObj(library_setup[lib.location]) + '\n');
+        const linkedLibraryNames = {}
+        linkedLibraries.filter(lib => library_setup[lib.location]).forEach(lib => {if (!linkedLibraryNames[lib.location]) {out += "const lib_" + lib.location + " = " + genLibraryObj(library_setup[lib.location]) + '\n'; linkedLibraryNames[lib.location] = true;}});
         out += `\n\nwasmInstance = new WebAssembly.Instance(new WebAssembly.Module(fs.readFileSync("${originalFileName.replace("tmb", "wasm")}")), { ${formatLinkedLibraries(linkedLibraries)} });`;
         out += `\n\nconst { setMemory, memory ${originalExports ? ', ' : ''}${originalExports.join(', ')} } = wasmInstance.exports;`;
         out += `\n\nmodule.exports = { ${originalExports.join(', ')} }`;

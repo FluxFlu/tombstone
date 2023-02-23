@@ -12,16 +12,17 @@ function generate_coerce(from, to, term, requires_explicit, S) {
             return log_error("invalid_coercion_call", true);
 
         value = Parameter.unzip(value);
+        
+        if (!isNaN(+value) || typeof value == "bigint")
+            write(`${from}.const ` + value);
 
         if (get_variables(value)) {
             get_variables(value).type = to;
             write(`${get_variables(value).scope}.get $` + get_variables(value).spot)
         }
-        console.trace()
 
 
         write(to + "." + term + "_" + from + (S ? "_s" : ""));
-        console.log(get_current())
 
         // if (value instanceof evaluated)
         //     return new evaluated(to)

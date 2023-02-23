@@ -42,7 +42,7 @@ function pushNums(bitmap, coercemap, ...n) {
             }
         } else if (bitmap[i] == "1") {
             if (coercemap) {
-                write(coercemap[i] + ".const " + n[i])
+                coerce(n[i], coercemap[i])
                 if (isLiteral(n[i]))
                     n[i] = new evaluated(coercemap[i]);
             } else
