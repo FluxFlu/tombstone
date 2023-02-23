@@ -1,9 +1,6 @@
 #!/bin/env node
 const wabt = require("wabt")
 const fs = require('fs');
-// const importHandler = require('./TMB/importHandler.js');
-// const harbourCompile = require('./harbour.js');
-// const importHandler = require('./importHandler.js');
 let args = process.argv.slice(2);
 if (args[0] == '-h' || args[0] == '--help') {
     console.log(fs.readFileSync(`${__dirname}/TMB/helpMessage`, "utf-8"));
@@ -19,8 +16,6 @@ if (args[0] == "--docs") {
 }
 if (!args[0] || !args[0][0] || args[0][0] == '-') return;
 
-// let language = args[0];
-// args.splice(0, 1);
 const options = {
     "optimize": true,
     "minHeapSize": 4096,
@@ -53,7 +48,7 @@ const compile = require('./TMB/tombstone.js');
 
 if (options.language == "js" || options.language == "node") {
     if (args[1])
-        args[1] = args[1].replace('.wasm', '.wat');
+        args[1] = args[1].replace('.wasm', '.wat').replace('.js', '.wat');
 }
 
 if (!(args[1] && args[1].match(/\S/)))
@@ -74,7 +69,7 @@ Object.keys(options).forEach(e => {
 
 function mtc(file) {
     if (!file || !file.length) {
-        console.error("File does not exist");
+        console.error("File `" + args[0] + "` does not exist or is empty");
         return;
     }
 
@@ -109,6 +104,5 @@ function mtc(file) {
 
     return 0;
 }
-
 
 return mtc(fs.readFileSync(args[0], "utf-8"));
