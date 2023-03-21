@@ -163,24 +163,6 @@ module.exports = function precedence(tokens, number) {
     endParenthesis = 0;
     for (let i = 0; i < tokens.length; i++) {
 
-        // Handle datatype pointer notation (eg. `i32**`)
-        if (types[tokens[i].value] && tokens[i + 1] && tokens[i + 1].value) {
-
-            if (!tokens[i].misc)
-                tokens[i].misc = 0;
-
-            while (tokens[i + 1].value == '**') {
-                tokens[i].misc += 2;
-                tokens.splice(i + 1, 1);
-            }
-
-            if (tokens[i + 1].value == '*') {
-                tokens[i].misc ++;
-                tokens.splice(i + 1, 1);
-            }
-            
-        }
-
         if (tokens[i].type == "Identifier" && tokens[i].value == "return") {
             tokens.splice(i + 1, 0, new token("Operator", '('));
             let j;

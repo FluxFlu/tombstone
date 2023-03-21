@@ -1,6 +1,6 @@
-const { write, log_error } = require(`../../tombstone`);
+const { write, log_error, get_current } = require(`../../tombstone`);
 const { Parameter } = require(`./parameter`);
-const { add, mult, createDefaultOperator, softEquals, not, subtract, bit_and } = require(`./stdMath`);
+const { add, mult, softEquals, not, subtract, bit_and, fgreaterThanOrEqualTo } = require(`./stdMath`);
 const { evaluated, getSize, exists, getPtrType, getType } = require(`./variableUtils`);
 const { pushNums } = require(`./stackUtils`);
 const { options } = require(`../../../mtc`);
@@ -17,7 +17,7 @@ const soft_add = (n, i) => {
     n = pushed.unzipped[0]
     i = pushed.unzipped[1]
 
-    if (!n || !exists(i))
+    if (!exists(n) || !exists(i))
         return log_error(`improper_num_of_args`, true, '+', 2);
 
     const type = pushed.type;
@@ -37,8 +37,8 @@ function getReferencePtr(array) {
 
 function accessArrayValue(array, index) {
     const type = getPtrType(Parameter.vm(array)) || getType(Parameter.vm(array));
-    soft_add(add(array, 8), mult(index, getSize(type) == 64 ? 8 : 4))
-    return new Parameter(() => new evaluated(`Accessed Value`, type))
+    soft_add(add(array, 8), mult(index, getSize(type) == 64 ? 8 : 4));
+    return new Parameter(() => new evaluated(`Accessed Value`, type));
 }
 
 class Bitmap {
@@ -57,10 +57,10 @@ class Bitmap {
         write(`i${ptr}.load`);
 
 
-        // Do calculations to get whether that bit within that byte of meta memory is 1 or 0. The actual formula looks something like `return (1 << (ptr % 4)) & (*(ptr / 8))`
+        // Do calculations to get whether that bit within that byte of meta memory is 1 or 0. The actual formula looks something like `return (1 << (ptr % 8)) & (*(ptr / 8))`
         write(`i${ptr}.const 1`);
         pushNums("1", 'i' + ptr, number);
-        write(`i${ptr}.const 4`);
+        write(`i${ptr}.const 8`);
         write(`i${ptr}.rem_u`);
         write(`i${ptr}.shl`);
 
@@ -87,10 +87,10 @@ class Bitmap {
         write(`i${ptr}.load`);
 
 
-        // Do calculations to create a version of the original value but with this specific bit set to 1. The actual formula looks something like `*(ptr / 8) = (1 << (ptr % 4)) | (*(ptr / 8))`.
+        // Do calculations to create a version of the original value but with this specific bit set to 1. The actual formula looks something like `*(ptr / 8) = (1 << (ptr % 8)) | (*(ptr / 8))`.
         write(`i${ptr}.const 1`);
         pushNums("1", 'i' + ptr, number);
-        write(`i${ptr}.const 4`);
+        write(`i${ptr}.const 8`);
         write(`i${ptr}.rem_u`);
         write(`i${ptr}.shl`);
 
@@ -117,10 +117,10 @@ class Bitmap {
         write(`i${ptr}.div_u`);
         write(`i${ptr}.load`);
 
-        // Do calculations to create a version of the original value but with this specific bit set to 0. The actual formula looks something like `*(ptr / 8) = ((1 << (ptr % 4)) ^ -1) & (*(ptr / 8))`.
+        // Do calculations to create a version of the original value but with this specific bit set to 0. The actual formula looks something like `*(ptr / 8) = ((1 << (ptr % 8)) ^ -1) & (*(ptr / 8))`.
         write(`i${ptr}.const 1`);
         pushNums("1", 'i' + ptr, number);
-        write(`i${ptr}.const 4`);
+        write(`i${ptr}.const 8`);
         write(`i${ptr}.rem_u`);
         write(`i${ptr}.shl`);
 
@@ -147,7 +147,7 @@ class Bitmap {
         write(`i${ptr}.const 96`);
         write(`i${ptr}.add`);
     }
-    static page_to_ptr() {
+    static page_to_ptr(size) {
         // For example, let's say this is page 2, which would mean we're being passed 98
 
         // Take off the values used to protect the base, static, and count during calculations (98 - 96 = 2)
@@ -165,7 +165,7 @@ class Bitmap {
         // Add one for good luck.
         // write(`i${ptr}.const 1`);
         // write(`i${ptr}.add`);
-        return new evaluated("Reference Value", "i32");
+        return new evaluated("Reference Value", "i32", size);
     }
     static get_first_free(n) {
         n ||= 1;
@@ -193,7 +193,7 @@ class Bitmap {
          * 
          * Otherwise, end the loop.
          */
-        if_s(bit_and(not(this.get_page(new Parameter(() => this.loadStatic()))), not(createDefaultOperator("gt_u", "Malloc")(subtract(this.loadStatic(), this.loadBase()), n)))); // 
+        if_s(bit_and(not(this.get_page(new Parameter(() => this.loadStatic()))), not(fgreaterThanOrEqualTo(subtract(this.loadStatic(), this.loadBase()), n)))); // 
 
         // static++;
         this.addStatic(() => write(`i${ptr}.const 1`)); // Add 1 bit (representing 1 page) to the static. 
@@ -217,7 +217,7 @@ class Bitmap {
          * Otherwise, set the value we start looping from next time to be the value we just stopped looping from
          * And then keep looping.
          */
-        if_s(createDefaultOperator("gt_u", "Malloc")(new Parameter(() => subtract(this.loadStatic(), this.loadBase())), new Parameter(() => n))) // If we found a contiguous loop that's big enough, then end the loop
+        if_s(fgreaterThanOrEqualTo(new Parameter(() => subtract(this.loadStatic(), this.loadBase())), new Parameter(() => n))) // If we found a contiguous loop that's big enough, then end the loop
 
         // static = base + n
         this.setStatic(() => add(this.loadBase(), n)); // Set the static to be the base plus n. This represents the end of the contiguous loop. This works without conversion because both are represented in bits (1).
@@ -262,13 +262,12 @@ class Bitmap {
 
         return new evaluated(`i${ptr}`);
     }
-    static free(array) {
-
+    static free(array, size) {
         // base = ptr_to_page(array + array.length);
-        // write(`i32.const 3963`)
-        // write(`call $log`)
-
-        this.setBase(() => this.ptr_to_page(add(pushNums("1", null, array).unzipped[0], getArrayLength(array)))); // Get the end position of the array and store it in the base.
+        if (!exists(size))
+            this.setBase(() => this.ptr_to_page(add(pushNums("1", null, array).unzipped[0], getArrayLength(array)))); // Get the end position of the array and store it in the base.
+        else
+            this.setBase(() => this.ptr_to_page(add(pushNums("1", null, array).unzipped[0], size))); // Get the end position of the array and store it in the base, except this time we're being passed a `size` literal because the size isn't stored on the heap.
 
         // static = ptr_to_page(array);
         this.setStatic(() => this.ptr_to_page(pushNums("1", null, array).unzipped[0])); // Get the position of the array and store it in the static
@@ -434,33 +433,83 @@ class Bitmap {
 }
 
 class Array_t {
-    constructor(type, ...values) {
+    constructor(type, pointerSize, current_spot, ...values) {
         this.type = type;
+        this.pointerSize = parseInt(pointerSize);
+        this.current_spot = current_spot;
+        if (current_spot)
+            values = values[0];
         this.values = values;
         this.set();
     }
     create() {
-        Bitmap.malloc(Math.ceil((this.values.length * getSize(this.type) + 64) / 256))
+        Bitmap.malloc(Math.ceil((this.values.length * getSize((this.pointerSize - this.current_spot) ? 'i' + ptr : this.type) + 64) / 256))
         Bitmap.setStatic(() => Bitmap.page_to_ptr(Bitmap.loadBase()))
 
-        Bitmap.page_to_ptr(Bitmap.loadBase())
-        write(`i${ptr}.const ` + this.values.length * getSize(this.type) / 8);
-        write(`i${ptr}.store`)
+        Bitmap.page_to_ptr(Bitmap.loadBase());
+        write(`i${ptr}.const ` + this.values.length * getSize((this.pointerSize - this.current_spot) ? 'i' + ptr : this.type) / 8);
+        write(`i${ptr}.store`);
+
+        if (this.pointerSize - this.current_spot) {
+            Bitmap.loadCount();
+            if (this.current_spot) {
+                write(`i${ptr}.const ` + this.current_spot * 4);
+                write(`i${ptr}.add`);
+            }
+            Bitmap.loadStatic();
+            write(`i${ptr}.store`);
+        }
+    }
+    loadCurrentPtr() {
+        Bitmap.loadCount();
+        if (this.current_spot) {
+            write(`i${ptr}.const ` + this.current_spot * 4);
+            write(`i${ptr}.add`);
+        }
+        write(`i${ptr}.load`);
     }
     set() {
+        if (!this.current_spot && this.pointerSize) {
+            Bitmap.malloc(Math.ceil(this.pointerSize * ptr / 256))
+            Bitmap.setCount(() => Bitmap.page_to_ptr(Bitmap.loadBase()));
+        }
         this.create();
         this.values.forEach((e, i) => {
+            if (e instanceof Array)
+                e = new Array_t(this.type, this.pointerSize, this.current_spot + 1, e).getReferenceValue();
             write(`i${ptr}.const ` + (i * (getSize(this.type) == 64 ? 8 : 4) + 8));
-            Bitmap.loadStatic();
+
+            if (this.pointerSize - this.current_spot)
+                this.loadCurrentPtr();
+            else
+                Bitmap.loadStatic();
             write(`i${ptr}.add`);
             const type = pushNums(`1`, this.type, e).type;
             write(`${type}.store`);
             if (this.type != type)
                 log_error("incorrect_array_type", true, this.type, type);
         });
+        if (this.pointerSize && !this.current_spot) {
+            // This code relies heavily on `free` not setting values to zero. It frees the temporary array, and then we set base to the first value from the array, and return base.
+
+            Bitmap.free(new Parameter(() => Bitmap.loadCount()), this.pointerSize * ptr / 8);
+
+            Bitmap.setBase(() => {
+                Bitmap.loadCount();
+                write(`i${ptr}.load`);
+                Bitmap.ptr_to_page();
+            });
+        }
     }
     getReferenceValue() {
-        return new Parameter(() => Bitmap.page_to_ptr(Bitmap.loadBase()));
+        Bitmap.setBase(() => {
+            if (this.pointerSize - this.current_spot)
+                this.loadCurrentPtr();
+            else
+                Bitmap.loadStatic();
+            Bitmap.ptr_to_page();
+        });
+        return new Parameter(() => Bitmap.page_to_ptr(this.pointerSize, Bitmap.loadBase()));
     }
 }
 
@@ -482,8 +531,8 @@ class String_t {
             if (this.value.charCodeAt(i + 0) > 255 || this.value.charCodeAt(i + 1) > 255 || this.value.charCodeAt(i + 2) > 255 || this.value.charCodeAt(i + 3) > 255)
                 log_error("unicode_not_supported", true, this.value);
             return write(`i32.const ` + (
-                (this.value.charCodeAt(i + 0)      ) |
-                (this.value.charCodeAt(i + 1) << 8 ) |
+                (this.value.charCodeAt(i + 0)) |
+                (this.value.charCodeAt(i + 1) << 8) |
                 (this.value.charCodeAt(i + 2) << 16) |
                 (this.value.charCodeAt(i + 3) << 24)
             ));
@@ -506,4 +555,4 @@ class String_t {
     }
 }
 
-module.exports = { Bitmap, accessArrayValue, Array_t, String_t };
+module.exports = { Bitmap, getReferencePtr, ptr, pages, meta_memory, accessArrayValue, Array_t, String_t };

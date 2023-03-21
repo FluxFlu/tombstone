@@ -5,7 +5,7 @@ const { get_variables, getLiteral, isLiteral, exists } = require("./variableUtil
 const { evaluated, setScope, getScope, getType, valType } = require("./variableUtils");
 const { pushNums } = require("./stackUtils");
 const { options } = require("../../../mtc");
-const { removePointerCount } = require("./circular_dependency_mm");
+const { removePointerCount, changePointerCount } = require("./mmCount");
 const { Bitmap } = require("./mm");
 
 class fsig {
@@ -175,7 +175,7 @@ function return_s(n) {
         toCull.forEach(e => {
             if (e != n) {
                 if (exists(Parameter.vm(e)) && get_variables(Parameter.vm(e)) && get_variables(Parameter.vm(e)).size && get_variables(Parameter.vm(e)).initialized || e instanceof Parameter && Parameter.vm(e).type == "Reference Value") {
-                    removePointerCount(e);
+                    changePointerCount(e, "sub");
                 }
             }
         });

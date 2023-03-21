@@ -25,9 +25,10 @@ const setScope = x => { scope = x };
 
 
 class evaluated {
-    constructor(type, misc) {
+    constructor(type, misc, size) {
         this.type = type;
         this.misc = misc;
+        this.size = size;
     }
 }
 

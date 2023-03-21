@@ -1,6 +1,6 @@
 const { options } = require("../../../mtc");
 const { write, getPure, log_error, get_current } = require("../../tombstone");
-const { safeParameterUnzip } = require("./circular_dependency_parameter");
+const { safeParameterUnzip } = require("./safeParameterUnzip");
 const { coerce } = require("./coercion");
 const { getBiggestValue, evaluated, isLiteral, get_variables, getType, getLiteral } = require("./variableUtils");
 
@@ -37,7 +37,7 @@ function pushNums(bitmap, coercemap, ...n) {
                 }
             } else if (bitmap[i] == "1" && n[i].type == "Accessed Value") {
                 write(n[i].misc + ".load")
-            } else if (bitmap[i] == "1" && n[i].type != "Reference Value") {
+            } else if (bitmap[i] == "1" && n[i].type != "Reference Value" && coercemap) {
                 n[i] = coerce(n[i], coercemap[i]) || n[i];
             }
         } else if (bitmap[i] == "1") {

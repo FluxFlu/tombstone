@@ -1,6 +1,6 @@
 const { options } = require("../../../mtc");
 const { fileData } = require("../../tombstone");
-const { set, setGlobal, setGlobalFunction } = require("./stdMath");
+const { set, setGlobal, setGlobalFunction } = require("./set");
 const { getScope, getLiteral, get_variables } = require("./variableUtils");
 
 function declare(spot, type, misc, size, scope, ptrType, pure, isImport) {

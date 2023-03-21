@@ -16,15 +16,12 @@ let prevent_write = {
 };
 
 function write(str) {
-    // console.log(str)
-    // console.log(prevent_write)
     if (prevent_write.is)
         return;
     if (!functionGrounds)
         output[0] += langPrefix + str + langPostfix;
     else
         output[1] += langPrefix + str + langPostfix;
-    // console.log(output)
 }
 
 function get_current() {
@@ -63,9 +60,9 @@ const errors = {
 
     "cannot_modify_global": "`Unable to modify global variable [${args[0]}], even if within an impure context.`",
 
-    "no_initial_heap": "`You are compiling this program to have zero initial heap memory. This should be fine if you know what you're doing.`",
-    "no_maximum_heap": "`You are compiling this program to have zero maximum heap memory. This should be fine if you know what you're doing.`",
-    "init_heap_exceeds_max": "`Minimum heap size cannot be larger than maximum heap size.`",
+    "no_heap": "`You are compiling this program to not use heap memory. This should be fine if you know what you're doing. Setting \\`--garbageCollect\\` to false...`",
+    // "no_maximum_heap": "`You are compiling this program to have zero maximum heap memory. This should be fine if you know what you're doing.`",
+    // "init_heap_exceeds_max": "`Minimum heap size cannot be larger than maximum heap size.`",
     "invalid_heap": "`Invalid heap size \\`${args[0]}\\`. Heap sizes must be powers of 2 and less than or equal to 65536.`",
 
     "invalid_coercion_call": "`Invalid use of coercion? The compiler probably messed up on this one...`",
@@ -88,7 +85,7 @@ const errors = {
 }
 
 function format_args (arg) {
-    if (arg && arg.match(/^p[0-9]*_/))
+    if (arg && arg.match && arg.match(/^p[0-9]*_/))
         return arg.replace(/^p[0-9]*_/, '');
     return arg;
 }
@@ -157,7 +154,8 @@ const { pointerNotation } = require("./compilation/pointerNotation");
 const { pointer, alloc, get_variables } = require("./language-specifics/wasm/variableHandling");
 const { functionTable, createsig, fsighandle, function_s, endfunction_s, call, return_s, selfFunction } = require("./language-specifics/wasm/stdFunctions")
 const { getType, getSize, valType, getBiggestValue, pushNums, pushNumsLiteral, getLiteral, literals, reset_all_variableUtils } = require("./language-specifics/wasm/variableUtils")
-const { set, setGlobal, add, subtract, mult, divide, modulo, exponent, not, bit_and, bit_not, bit_or, bit_xor, right_shift, right_shift_unsigned, left_shift, softEquals, flessThan, fgreaterThan, fgreaterThanOrEqualTo, flessThanOrEqualTo, fplusplus, fminusminus, hardEquals, notEquals, hardNotEquals, and, or, plusEquals, minusEquals, multEquals, divEquals, modEquals, exponentEquals, leftShiftEquals, rightShiftEquals, unsignedRightShiftEquals, bitAndEquals, bitOrEquals, bitXorEquals, andEquals, orEquals, } = require("./language-specifics/wasm/stdMath");
+const { set, setGlobal } = require("./language-specifics/wasm/set");
+const { add, subtract, mult, divide, modulo, exponent, not, bit_and, bit_not, bit_or, bit_xor, right_shift, right_shift_unsigned, left_shift, softEquals, flessThan, fgreaterThan, fgreaterThanOrEqualTo, flessThanOrEqualTo, fplusplus, fminusminus, hardEquals, notEquals, hardNotEquals, and, or, plusEquals, minusEquals, multEquals, divEquals, modEquals, exponentEquals, leftShiftEquals, rightShiftEquals, unsignedRightShiftEquals, bitAndEquals, bitOrEquals, bitXorEquals, andEquals, orEquals, } = require("./language-specifics/wasm/stdMath");
 const { if_s, endif_s, else_s, while_s, endwhile_s } = require("./language-specifics/wasm/std");
 const { createHeap } = require("./language-specifics/wasm/heap");
 const { accessArrayValue, Array_t, String_t } = require("./language-specifics/wasm/mm");
@@ -198,16 +196,20 @@ function tombstone_cleanup(isLinked) {
 
 function tombstone(file, filename, isLinked) {
     compiles = true;
-    if (options.minHeapSize > options.maxHeapSize)
-        log_compiler_error("init_heap_exceeds_max", true);
+    // if (options.minHeapSize > options.maxHeapSize)
+    //     log_compiler_error("init_heap_exceeds_max", true);
 
-    if (!options.maxHeapSize)
-        log_compiler_error("no_maximum_heap", false);
-    if (!options.minHeapSize)
-        log_compiler_error("no_initial_heap", false);
+    if (!options.maxHeapSize) {
+        log_compiler_error("no_heap", false);
+        options.garbageCollect = false;
+    }
+    // if (!options.maxHeapSize)
+    //     log_compiler_error("no_maximum_heap", false);
+    // if (!options.minHeapSize)
+    //     log_compiler_error("no_initial_heap", false);
 
     checkValidHeapSize(options.minHeapSize);
-    checkValidHeapSize(options.maxHeapSize);
+    // checkValidHeapSize(options.maxHeapSize);
 
     if (!compiles)
         return null;
@@ -289,8 +291,11 @@ function tombstone(file, filename, isLinked) {
     
     fileData.current = name_from_dir(filename);
     fileData.current_file = filename;
+
+    // console.log(file)
     
     eval(file);
+    
 
     let returnValue = output[1].concat(output[0]);
     let support;

@@ -6,6 +6,8 @@ const { types, token } = require("./tokenizationHandler");
 
 const terminatingTokens = [/*',', */';', '\n'];
 
+const preventParameterizing = {"return_s": true}
+
 function compile(tokens) {
 
     const tree = [];
@@ -55,12 +57,12 @@ function compile(tokens) {
                 }
             }
         }
-
-        if (tokens[i].type == "Identifier" && tokens[i + 1].value == '(') {
+        if (tokens[i].type == "Identifier" && tokens[i + 1].value == '(' && tokens[i - 1].value != "(() => {return (" && !terminatingTokens.includes(tokens[i - 1].value) && !preventParameterizing[tokens[i].value]) {
             tokens.splice(i + 2, 0, token("ParameterObject", "new Parameter"));
             tokens.splice(i + 3, 0, token("Operator", "(() => {return ("));
             let brack = 1;
-            for (let j = i + 4; tokens[j]; j++) {
+            let j;
+            for (j = i + 4; tokens[j]; j++) {
                 if (tokens[j].value == '(')
                     brack++;
                 if (tokens[j].value == ')')
@@ -75,6 +77,8 @@ function compile(tokens) {
                     tokens.splice(++j, 0, token("Operator", "(() => {return ("));
                 }
             }
+            tokens.splice(++j + 1, 0, token("Operator", ');})'));
+            tree.push("new Parameter(() => {return (")
         }
 
         if ((tokens[i].value == ',' || tokens[i].type == "Separator" || i == tokens.length - 1/* || precedenceOperatorList.includes(tokens[i].value)*/) && endParenthesis) {

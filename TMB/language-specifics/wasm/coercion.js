@@ -1,5 +1,5 @@
 const { write, log_compiler_error, log_error, get_current } = require("../../tombstone");
-const { safeParameterUnzip } = require("./circular_dependency_parameter");
+const { safeParameterUnzip } = require("./safeParameterUnzip");
 const { Parameter } = require("./parameter");
 const { getType, exists, get_variables, evaluated } = require("./variableUtils");
 
@@ -21,11 +21,8 @@ function generate_coerce(from, to, term, requires_explicit, S) {
             write(`${get_variables(value).scope}.get $` + get_variables(value).spot)
         }
 
-
         write(to + "." + term + "_" + from + (S ? "_s" : ""));
 
-        // if (value instanceof evaluated)
-        //     return new evaluated(to)
         return new evaluated(to);
     }
 }
@@ -109,8 +106,11 @@ const coercions = {
 
 function coerce(value, desiredType) {
     value = safeParameterUnzip(value);
-    if (getType(value) == desiredType)
+    if (getType(value) == desiredType) {
+        if (+value == value || typeof value == "bigint")
+            write(`${desiredType}.const ` + value)
         return value;
+    }
     if (!coercions[getType(value)]) {
         return
     }

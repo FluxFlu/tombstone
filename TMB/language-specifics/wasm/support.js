@@ -35,7 +35,8 @@ function genSupport(language, linkedFiles, linkedLibraries, originalFileName, or
         out += '\nlet wasmInstance;';
         out += '\n\n';
         const linkedLibraryNames = {}
-        linkedLibraries.filter(lib => library_setup[lib.location]).forEach(lib => {if (!linkedLibraryNames[lib.location]) {out += "const lib_" + lib.location + " = " + genLibraryObj(library_setup[lib.location]) + '\n'; linkedLibraryNames[lib.location] = true;}});
+        linkedLibraries = linkedLibraries.filter(e => {if (linkedLibraryNames[e.location]) return false; return linkedLibraryNames[e.location] = true})
+        linkedLibraries.filter(lib => library_setup[lib.location]).forEach(lib => {out += "const lib_" + lib.location + " = " + genLibraryObj(library_setup[lib.location]) + '\n';});
         out += `\n\nwasmInstance = new WebAssembly.Instance(new WebAssembly.Module(fs.readFileSync("${originalFileName.replace("tmb", "wasm")}")), { ${formatLinkedLibraries(linkedLibraries)} });`;
         out += `\n\nconst { setMemory, memory ${originalExports ? ', ' : ''}${originalExports.join(', ')} } = wasmInstance.exports;`;
         out += `\n\nmodule.exports = { ${originalExports.join(', ')} }`;
@@ -54,9 +55,9 @@ function genSupport(language, linkedFiles, linkedLibraries, originalFileName, or
         out += `\nprocess.argv.shift();`;
 	out += `\nprocess.argv = process.argv.join(' ')`;
         out += `\n`;
-        out += `\nregister_string(${Math.ceil(options.maxHeapSize / 257) * 4}, process.argv)`;
+        out += `\nregister_string(${Math.ceil(options.maxHeapSize * 2000 / 257)}, process.argv)`;
         out += `\n`;
-        out += fileData.entryPoint + `(${Math.ceil(options.maxHeapSize / 257) * 4});`;
+        out += fileData.entryPoint + `(${Math.ceil(options.maxHeapSize * 2000 / 257)});`;
     }
     return out;
 }
