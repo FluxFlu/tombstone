@@ -1,7 +1,7 @@
 const { write, log_error, get_current } = require(`../../tombstone`);
 const { Parameter } = require(`./parameter`);
 const { add, mult, softEquals, not, subtract, bit_and, fgreaterThanOrEqualTo } = require(`./stdMath`);
-const { evaluated, getSize, exists, getPtrType, getType } = require(`./variableUtils`);
+const { evaluated, getSize, exists, getPtrType, getType, getLiteral } = require(`./variableUtils`);
 const { pushNums } = require(`./stackUtils`);
 const { options } = require(`../../../mtc`);
 const { if_s, endif_s, else_s, new_loop } = require("./std");
@@ -11,6 +11,14 @@ const ptr = options.pointerSize;
 const pages = options.maxHeapSize * 2000; // The number of pages available to use
 
 const meta_memory = Math.ceil(pages / 257); // We store one page per bit of meta memory, which means we store 256 pages per page of meta memory, which means 1/257 of our pages need to be meta memory. 
+
+
+
+// SETSTR, ADDSTR, and LOADSTR are NEVER USED
+// ADDITIONALLY, THERE ARE AN EXTRA FOUR BYTES FREED UP FOR AN ADDITIONAL ALLOC VALUE LATER ON.
+
+
+
 
 const soft_add = (n, i) => {
     const pushed = pushNums("11", "i32", n, i);
@@ -143,15 +151,15 @@ class Bitmap {
         write(`i${ptr}.const 32`);
         write(`i${ptr}.div_u`);
 
-        // Add the values used to protect the base, static, and count during calculations (2 + 96 = 98)
-        write(`i${ptr}.const 96`);
+        // Add the values used to protect the alloc values during calculations (2 + 160 = 162)
+        write(`i${ptr}.const 160`);
         write(`i${ptr}.add`);
     }
-    static page_to_ptr(size) {
-        // For example, let's say this is page 2, which would mean we're being passed 98
+    static page_to_ptr(type, size) {
+        // For example, let's say this is page 2, which would mean we're being passed 162
 
-        // Take off the values used to protect the base, static, and count during calculations (98 - 96 = 2)
-        write(`i${ptr}.const 96`);
+        // Take off the values used to protect the alloc values during calculations (162 - 160 = 2)
+        write(`i${ptr}.const 160`);
         write(`i${ptr}.sub`);
 
         // Convert from bits representing pages to a pointer to the actual page (2 * 32 = 64 bytes. This makes sense, as a page is 8 words, or 32 bytes, so page 2 would be at 64 bytes.)
@@ -161,18 +169,15 @@ class Bitmap {
         // Add the meta memory, to protect from overwriting our hard earned bitmap area.
         write(`i${ptr}.const ` + meta_memory);
         write(`i${ptr}.add`);
-
-        // Add one for good luck.
-        // write(`i${ptr}.const 1`);
-        // write(`i${ptr}.add`);
-        return new evaluated("Reference Value", "i32", size);
+        
+        return new evaluated("Reference Value", type, size);
     }
     static get_first_free(n) {
         n ||= 1;
         // n = Number of bytes (8) to allocate
 
         const loop_name = new_loop();
-        this.setBase(() => write(`i${ptr}.const 96`)); // Start at bit 96 (Because the base, static, and count are all i32s, so 0-31, 32-63, and 64-95) as so to not overwrite the base, static, and count
+        this.setBase(() => write(`i${ptr}.const 160`)); // Start at bit 160 (Because the alloc values are all i32s, so 0-31, 32-63, and 64-95) as so to not overwrite the alloc values
         write("(loop $" + loop_name);
         //{
 
@@ -338,6 +343,12 @@ class Bitmap {
 
         return new evaluated(`i${ptr}`);
     }
+    static loadStr() {
+        write(`i${ptr}.const 12`);
+        write(`i${ptr}.load`);
+
+        return new evaluated(`i${ptr}`);
+    }
     static addBase(fn) {
         write(`i${ptr}.const 0`);
         this.loadBase();
@@ -362,6 +373,14 @@ class Bitmap {
         write(`i${ptr}.store`);
         return new evaluated(`i${ptr}`);
     }
+    static addStr(fn) {
+        write(`i${ptr}.const 12`);
+        this.loadStr();
+        fn();
+        write(`i${ptr}.add`);
+        write(`i${ptr}.store`);
+        return new evaluated(`i${ptr}`);
+    }
     static setBase(fn) {
         write(`i${ptr}.const 0`);
         fn();
@@ -376,6 +395,12 @@ class Bitmap {
     }
     static setCount(fn) {
         write(`i${ptr}.const 8`);
+        fn();
+        write(`i${ptr}.store`);
+        return new evaluated(`i${ptr}`);
+    }
+    static setStr(fn) {
+        write(`i${ptr}.const 12`);
         fn();
         write(`i${ptr}.store`);
         return new evaluated(`i${ptr}`);
@@ -436,6 +461,8 @@ class Array_t {
     constructor(type, pointerSize, current_spot, ...values) {
         this.type = type;
         this.pointerSize = parseInt(pointerSize);
+        if (this.type == "str")
+            this.pointerSize++;
         this.current_spot = current_spot;
         if (current_spot)
             values = values[0];
@@ -470,7 +497,7 @@ class Array_t {
     }
     set() {
         if (!this.current_spot && this.pointerSize) {
-            Bitmap.malloc(Math.ceil(this.pointerSize * ptr / 256))
+            Bitmap.malloc(Math.ceil((this.pointerSize) * ptr / 256))
             Bitmap.setCount(() => Bitmap.page_to_ptr(Bitmap.loadBase()));
         }
         this.create();
@@ -486,7 +513,7 @@ class Array_t {
             write(`i${ptr}.add`);
             const type = pushNums(`1`, this.type, e).type;
             write(`${type}.store`);
-            if (this.type != type)
+            if (getLiteral(this.type) != type)
                 log_error("incorrect_array_type", true, this.type, type);
         });
         if (this.pointerSize && !this.current_spot) {
@@ -509,7 +536,7 @@ class Array_t {
                 Bitmap.loadStatic();
             Bitmap.ptr_to_page();
         });
-        return new Parameter(() => Bitmap.page_to_ptr(this.pointerSize, Bitmap.loadBase()));
+        return new Parameter(() => Bitmap.page_to_ptr(this.type, this.pointerSize, Bitmap.loadBase()));
     }
 }
 
@@ -519,7 +546,11 @@ class String_t {
         this.set();
     }
     create() {
+        if (this.number_to_make > 1) {
+
+        }
         Bitmap.malloc(Math.ceil((this.value.length * 8 + 64) / 256))
+
         Bitmap.setStatic(() => Bitmap.page_to_ptr(Bitmap.loadBase()))
 
         Bitmap.page_to_ptr(Bitmap.loadBase())
@@ -530,14 +561,14 @@ class String_t {
         if (typeof this.value == "string") {
             if (this.value.charCodeAt(i + 0) > 255 || this.value.charCodeAt(i + 1) > 255 || this.value.charCodeAt(i + 2) > 255 || this.value.charCodeAt(i + 3) > 255)
                 log_error("unicode_not_supported", true, this.value);
-            return write(`i32.const ` + (
-                (this.value.charCodeAt(i + 0)) |
-                (this.value.charCodeAt(i + 1) << 8) |
+            return write("i32.const " + (
+                (this.value.charCodeAt(i + 0)      ) |
+                (this.value.charCodeAt(i + 1) << 8 ) |
                 (this.value.charCodeAt(i + 2) << 16) |
                 (this.value.charCodeAt(i + 3) << 24)
             ));
         }
-        return pushNums(`1`, "i32", e);
+        return pushNums('1', "i32", e);
     }
     set() {
         this.create();
@@ -547,11 +578,11 @@ class String_t {
             Bitmap.loadStatic();
             write(`i${ptr}.add`);
             this.chars_to_i32(i)
-            write(`i32.store`);
+            write("i32.store");
         }
     }
     getReferenceValue() {
-        return new Parameter(() => Bitmap.page_to_ptr(Bitmap.loadBase()));
+        return new Parameter(() => Bitmap.page_to_ptr("str", 0, Bitmap.loadBase()));
     }
 }
 

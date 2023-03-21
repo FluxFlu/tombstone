@@ -45,7 +45,7 @@ function precompile(tokens) {
         }
 
         if (tokens[i].type == "String") {
-            tokens[i].value = `new String_t(${tokens[i].value}).getReferenceValue()`
+            tokens[i].value = `new Parameter(() => {return new String_t(${tokens[i].value}).getReferenceValue()})`
         }
 
         if (tokens[i].value == "for") {

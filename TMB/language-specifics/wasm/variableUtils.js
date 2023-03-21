@@ -63,6 +63,7 @@ const typeSizes = {
     "f32": 32,
     "f64": 64,
     "fn": 32,
+    "str": 32,
     "nil": 32
 }
 function getSize(n) {

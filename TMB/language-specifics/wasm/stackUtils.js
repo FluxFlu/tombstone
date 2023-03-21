@@ -36,7 +36,7 @@ function pushNums(bitmap, coercemap, ...n) {
                     n[i] = coerce(n[i], coercemap[i]) || n[i];
                 }
             } else if (bitmap[i] == "1" && n[i].type == "Accessed Value") {
-                write(n[i].misc + ".load")
+                write(getLiteral(n[i].misc) + ".load")
             } else if (bitmap[i] == "1" && n[i].type != "Reference Value" && coercemap) {
                 n[i] = coerce(n[i], coercemap[i]) || n[i];
             }
