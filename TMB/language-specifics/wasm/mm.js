@@ -177,7 +177,7 @@ class Bitmap {
         // n = Number of bytes (8) to allocate
 
         const loop_name = new_loop();
-        this.setBase(() => write(`i${ptr}.const 160`)); // Start at bit 160 (Because the alloc values are all i32s, so 0-31, 32-63, and 64-95) as so to not overwrite the alloc values
+        this.setBase(() => write(`i${ptr}.const 160`)); // Start at bit 160 (Because the alloc values are all i32s, so 0-31, 32-63, 64-95, 96-127, and 128-159) as so to not overwrite the alloc values
         write("(loop $" + loop_name);
         //{
 
@@ -409,15 +409,15 @@ class Bitmap {
     static garbageCollect() {
 
         /**
-         * for (let base = 64; base < meta_memory; base++) {
+         * for (let base = 160; base < meta_memory; base++) {
          *      if (*get_page(base) && !*(get_page(base) + 4)) {
          *          free(get_page(base))
          *      }
          * }
          */
 
-        // Initialize base at 64
-        this.setCount(() => write(`i32.const 64`))
+        // Initialize base at 160
+        this.setCount(() => write(`i32.const 160`))
 
         // Start the loop
         const loop_name = new_loop();

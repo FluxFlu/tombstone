@@ -41,7 +41,7 @@ function genSupport(language, linkedFiles, linkedLibraries, originalFileName, or
         out += `\n\nconst { setMemory, memory ${originalExports ? ', ' : ''}${originalExports.join(', ')} } = wasmInstance.exports;`;
         out += `\n\nmodule.exports = { ${originalExports.join(', ')} }`;
         out += '\nfunction register_string(location, string) {';
-        out += `\n      setMemory(15, 1);`
+        out += `\n      setMemory(20, 1);`
         out += `\n      setMemory(location, string.length);`
         out += '\n  for(let i = 0; i < Math.ceil(string.length / 4); i++)';
         out += `\n      setMemory(location + i + 8,
@@ -58,6 +58,7 @@ function genSupport(language, linkedFiles, linkedLibraries, originalFileName, or
         out += `\nregister_string(${Math.ceil(options.maxHeapSize * 2000 / 257)}, process.argv)`;
         out += `\n`;
         out += fileData.entryPoint + `(${Math.ceil(options.maxHeapSize * 2000 / 257)});`;
+        out += `console.log(new Uint8Array(memory.buffer.slice(${Math.ceil(0)})))`
     }
     return out;
 }

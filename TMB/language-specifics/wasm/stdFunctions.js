@@ -103,7 +103,7 @@ function fsighandle() {
         let params = "(param " + fsigs[i].params.map(e => getLiteral(e)).join(") (param ") + ") ";
         if (fsigs[i].params.length == 0)
             params = "";
-        write(`(type $fsig${intToString(i)} (func ${params}${fsigs[i].result != "nil" ? `(result ${fsigs[i].result})` : ""}))`);
+        write(`(type $fsig${intToString(i)} (func ${params}${fsigs[i].result != "nil" ? `(result ${getLiteral(fsigs[i].result)})` : ""}))`);
         fsigs[i].name = intToString(i);
     }
 }
@@ -134,7 +134,7 @@ function function_s(name, type, parameters, locals, export_b, pure) {
         pureWrite(` (param $${paramName} ${getLiteral(paramType)})`);
     }
     if (type != "nil")
-        pureWrite(" (result " + type + ")");
+        pureWrite(" (result " + getLiteral(type) + ")");
 
     for (let i = 0; i < locals.length; i++) {
         if (locals[i].split(' ')[2] == undefined)
@@ -181,6 +181,8 @@ function return_s(n) {
         });
         Bitmap.garbageCollect();
     }
+
+    console.log("RETURNED:", n)
 
     returned = true;
 

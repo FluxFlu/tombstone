@@ -58,6 +58,7 @@ function compile(tokens) {
             }
         }
         if (tokens[i].type == "Identifier" && tokens[i + 1].value == '(' && tokens[i - 1].value != "(() => {return (" && !terminatingTokens.includes(tokens[i - 1].value) && !preventParameterizing[tokens[i].value]) {
+            console.log(tokens.slice(i - 10, i + 10))
             tokens.splice(i + 2, 0, token("ParameterObject", "new Parameter"));
             tokens.splice(i + 3, 0, token("Operator", "(() => {return ("));
             let brack = 1;

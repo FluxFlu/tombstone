@@ -292,7 +292,7 @@ function tombstone(file, filename, isLinked) {
     fileData.current = name_from_dir(filename);
     fileData.current_file = filename;
 
-    // console.log(file)
+    console.log(file)
     
     eval(file);
     
