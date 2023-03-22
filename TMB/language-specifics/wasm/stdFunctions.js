@@ -182,8 +182,6 @@ function return_s(n) {
         Bitmap.garbageCollect();
     }
 
-    console.log("RETURNED:", n)
-
     returned = true;
 
     if (n instanceof evaluated) {

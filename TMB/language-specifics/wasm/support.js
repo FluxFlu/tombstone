@@ -58,7 +58,6 @@ function genSupport(language, linkedFiles, linkedLibraries, originalFileName, or
         out += `\nregister_string(${Math.ceil(options.maxHeapSize * 2000 / 257)}, process.argv)`;
         out += `\n`;
         out += fileData.entryPoint + `(${Math.ceil(options.maxHeapSize * 2000 / 257)});`;
-        out += `console.log(new Uint8Array(memory.buffer.slice(${Math.ceil(0)})))`
     }
     return out;
 }
