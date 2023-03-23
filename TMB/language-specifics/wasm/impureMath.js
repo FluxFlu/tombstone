@@ -80,10 +80,10 @@ const bitXorEquals = createNEquals(bit_xor, '^=');
 
 const andEquals = (n, i) => {
     if (getPure())
-        return log_error("impure_operator_from_pure", true, "&&")
+        return log_error("impure_operator_from_pure", true, "&&=")
 
     if (!exists(Parameter.vm(n)) || !exists(Parameter.vm(i)))
-        return log_error(`improper_num_of_args`, true, "&&", 2);
+        return log_error(`improper_num_of_args`, true, "&&=", 2);
 
     if_s(n);
     set(n, i, true);
@@ -93,10 +93,10 @@ const andEquals = (n, i) => {
 
 const orEquals = (n, i) => {
     if (getPure())
-        return log_error("impure_operator_from_pure", true, "||")
+        return log_error("impure_operator_from_pure", true, "||=")
 
     if (!exists(Parameter.vm(n)) || !exists(Parameter.vm(i)))
-        return log_error(`improper_num_of_args`, true, "||", 2);
+        return log_error(`improper_num_of_args`, true, "||=", 2);
 
     if_s(not(n));
     set(n, i, true);
