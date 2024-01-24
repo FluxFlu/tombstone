@@ -1,4 +1,8 @@
 # tombstone
+
+
 A compiler and documentation for a programming language, "Tombstone."
 
-This has been worked on for about 2-3 months, so expect bugs. Please report any bugs found in the `issues` tab.
+I wrote this compiler and language about two years ago. I did it in 2-3 months during my sophomore year of High School.
+
+I am rather embarrassed of this project, but I feel the need to publicly archive it, for whatever reason.
